@@ -1,0 +1,1 @@
+import{j as t}from"./index-UwUUR7on.js";import r from"./EventFormPanel-D8sGHJQu.js";import"./CalendarToday-C0RBPGvt.js";import"./Box-Cacg7jsl.js";import"./EventDetailsPanel-CZYK0mvY.js";import"./TextField-CrKf4flB.js";import"./MenuItem-DvGQJo1-.js";import"./Alert-D_w8HAtG.js";function f(){return t.jsx(r,{})}export{f as default};
