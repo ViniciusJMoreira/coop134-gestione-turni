@@ -1,0 +1,1 @@
+import{j as t}from"./vendor-ui-CdS3g7Hs.js";import r from"./EventFormPanel-W-MdCHkD.js";import"./index-DAdZIn8i.js";import"./vendor-react-BZMvSTjs.js";import"./ActivityProvider-miMd1G6h.js";function p(){return t.jsx(r,{})}export{p as default};
