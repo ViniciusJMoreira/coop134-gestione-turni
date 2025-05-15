@@ -1,0 +1,1 @@
+import{j as t}from"./vendor-ui-ifLq-YzB.js";import r from"./EventFormPanel-D9nvWERZ.js";import"./index-C8OFIz03.js";import"./vendor-react-Bmf8nP68.js";import"./getStringOfDay-DeMENUBZ.js";function p(){return t.jsx(r,{})}export{p as default};
