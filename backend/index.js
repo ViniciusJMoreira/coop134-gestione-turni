@@ -122,7 +122,7 @@ app.post("/api/activities", async (req, res) => {
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
       range: RANGE_NAME,
-      valueInputOption: "RAW",
+      valueInputOption: "USER_ENTERED",
       insertDataOption: "INSERT_ROWS",
       resource: {
         values: [
@@ -151,7 +151,7 @@ app.put("/api/activities/:row", async (req, res) => {
     await sheets.spreadsheets.values.update({
       spreadsheetId: SPREADSHEET_ID,
       range: range,
-      valueInputOption: "RAW",
+      valueInputOption: "USER_ENTERED",
       resource: {
         values: [
           [date, worksite, task, startTime, endTime, totalHours, km, notes],
@@ -166,6 +166,57 @@ app.put("/api/activities/:row", async (req, res) => {
     res
       .status(500)
       .json({ message: "Errore del server durante l'aggiornamento" });
+  }
+});
+
+// Route: elimina riga specificata
+app.delete("/api/activities/:row", async (req, res) => {
+  try {
+    const rowNumber = req.params.row;
+    const { id } = req.body;                       // l'userId passato dal client
+    const sheetName = `Tabella-${id}`;        // es. "Tabella-1234"
+
+    const client = await auth.getClient();
+    const sheets = google.sheets({ version: "v4", auth: client });
+
+    // 1) recupera metadata per trovare sheetId numerico
+    const meta = await sheets.spreadsheets.get({
+      spreadsheetId: SPREADSHEET_ID,
+    });
+    const sheetMeta = meta.data.sheets.find(
+      (s) => s.properties.title === sheetName
+    );
+    if (!sheetMeta) {
+      return res.status(404).json({ message: "Attività non trovata!" });
+    }
+    const sheetId = sheetMeta.properties.sheetId;
+
+    // 2) batchUpdate con DeleteDimensionRequest
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId: SPREADSHEET_ID,
+      requestBody: {
+        requests: [
+          {
+            deleteDimension: {
+              range: {
+                sheetId: sheetId,
+                dimension: "ROWS",
+                // gli indici partono da 0, header è riga 0, la tua rowNumber corrisponde index = rowNumber-1
+                startIndex: rowNumber - 1,
+                endIndex: rowNumber, 
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    // 3) restituisci i record aggiornati
+    const records = await getRecordsById(id);
+    res.json({ message: "Riga eliminata con successo", records });
+  } catch (error) {
+    console.error("Errore in DELETE /api/activities/:row:", error);
+    res.status(500).json({ message: error.message });
   }
 });
 
