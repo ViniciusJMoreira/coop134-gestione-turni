@@ -1,0 +1,1 @@
+import{j as t}from"./vendor-ui-ifLq-YzB.js";import r from"./EventFormPanel-TAdsCyWo.js";import"./index-Bup-Fr1E.js";import"./vendor-react-Bmf8nP68.js";import"./convertDate-Bb6LZ3D4.js";function p(){return t.jsx(r,{})}export{p as default};
