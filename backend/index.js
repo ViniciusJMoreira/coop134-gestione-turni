@@ -117,25 +117,52 @@ app.post("/api/activities", async (req, res) => {
     const { id, date, worksite, task, startTime, endTime, totalHours, km, notes } = req.body;
     const client = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: client });
-    const RANGE_NAME = `Tabella-${id}!A:I`;
-    // Aggiungi una nuova riga al foglio con i valori forniti
-    await sheets.spreadsheets.values.append({
+    const sheetName = `Tabella-${id}`;
+
+    // 1) Leggi tutte le righe attuali nella tabella
+    const getRes = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: RANGE_NAME,
+      range: `${sheetName}!A:I`,
+    });
+    const rows = getRes.data.values || [];
+
+    // 2) Trova la prima riga (dopo header) con colonna A vuota
+    let freeRow;
+    for (let i = 1; i < rows.length; i++) {
+      // rows[i] corrisponde a riga i+1 su Sheets
+      const firstCell = rows[i][0] || "";
+      if (firstCell.trim() === "") {
+        freeRow = i + 1;
+        break;
+      }
+    }
+    // Se tutte le righe esistenti hanno già un valore in A, aggiungi subito dopo l’ultima
+    if (!freeRow) {
+      freeRow = rows.length + 1;
+    }
+
+    // 3) Sovrascrivi i valori proprio su quella riga
+    const updateRange = `${sheetName}!A${freeRow}:I${freeRow}`;
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SPREADSHEET_ID,
+      range: updateRange,
       valueInputOption: "USER_ENTERED",
-      insertDataOption: "INSERT_ROWS",
       resource: {
         values: [
           [date, worksite, task, startTime, endTime, totalHours, km, notes],
         ],
       },
     });
-    // Ricarica le attività aggiornate dell'utente e restituiscile
+
+    // 4) Ricarica e restituisci i record aggiornati
     const records = await getRecordsById(id);
-    return res.status(201).json({ message: "Attività aggiunta con successo", records: records });
+    return res.status(200).json({
+      message: `Attività salvata in riga ${freeRow}`,
+      records,
+    });
   } catch (error) {
     console.error("Errore in POST /api/activities:", error);
-    res.status(500).json({ message: "Errore del server durante l'aggiunta" });
+    return res.status(500).json({ message: error.message });
   }
 });
 
